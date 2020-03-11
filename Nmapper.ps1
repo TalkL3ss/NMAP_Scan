@@ -1,10 +1,10 @@
 $cFile = 'c:\temp\Current.csv'
 $oFile = 'c:\temp\OldVer.csv'
-copy $cFile $oFile -Force
+cp $cFile $oFile -Force
 $max = 20
 $nmapper = (nmap -sP 0.0.0.0/24 | Select-String -Pattern "\d{1,3}(\.\d{1,3}){3}" -AllMatches).Matches.Value
 rm $cFile -Force -Confirm:$false
-'"IP","PORT"' | Set-Content $cFile -Force 
+'"IP","PORT"' | tee $cFile -Force 
 
 Function AsyncJobs($ip) {
 $sb = { param($ip)
@@ -19,7 +19,7 @@ $sb = { param($ip)
 
 } 
 
-$nmapper | select -First 4 |  % { AsyncJobs -ip $_  }
+$nmapper | select -First 4 |  % -parallel { AsyncJobs -ip $_  }
 Get-Job * | Wait-Job 
 Compare-Object (gc 'C:\temp\Current.csv') (gc 'C:\temp\OldVer.csv') | select @{N='Address'; exp= {($_.InputObject).split(",")[1]}},@{N='Port'; exp= {($_.InputObject).split(",")[0]}},@{N='Removed/Add'; exp= {if ($_.SideIndicator -like "<=") { "Added" } elseif ($_.SideIndicator -like "=>") { "Removed" }}} | tee C:\temp\RunNewOld.csv
 ii C:\temp\RunNewOld.csv
