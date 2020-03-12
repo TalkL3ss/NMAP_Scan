@@ -1,3 +1,4 @@
+#TODO: split the config from the function + do not send report if no changes are made
 $cFile = 'c:\temp\Current.csv'
 $oFile = 'c:\temp\OldVer.csv'
 cp $cFile $oFile -Force
